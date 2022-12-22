@@ -13,6 +13,7 @@ Note that because it is recursive, `bmul(a, b)` will not necessarilly do the sam
 """
 module RecursiveTupleMath
 
+using Base: @_inline_meta
 export bmax, bmin, badd, bsub, bmul, bdiv
 
 using StaticArrays, ForwardDiff
@@ -84,43 +85,86 @@ end
 
 ForwardDiff.@define_binary_dual_op(
   RecursiveTupleMath.badd,
-  ForwardDiff.Dual{Txy}(badd(x.value, y.value), badd(x.partials.values, y.partials.values)),
-  ForwardDiff.Dual{Tx}(badd(x.value, y), x.partials),
-  ForwardDiff.Dual{Ty}(badd(x, y.value), y.partials.values)
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Txy}(
+      badd(x.value, y.value),
+      badd(x.partials.values, y.partials.values),
+    )
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Tx}(badd(x.value, y), x.partials)
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Ty}(badd(x, y.value), y.partials.values)
+  end,
 )
 ForwardDiff.@define_binary_dual_op(
   RecursiveTupleMath.bsub,
-  ForwardDiff.Dual{Txy}(bsub(x.value, y.value), bsub(x.partials.values, y.partials.values)),
-  ForwardDiff.Dual{Tx}(bsub(x.value, y), x.partials),
-  ForwardDiff.Dual{Ty}(bsub(x, y.value), bsub(y.partials.values))
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Txy}(
+      bsub(x.value, y.value),
+      bsub(x.partials.values, y.partials.values),
+    )
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Tx}(bsub(x.value, y), x.partials)
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Ty}(bsub(x, y.value), bsub(y.partials.values))
+  end
 )
 ForwardDiff.@define_binary_dual_op(
   RecursiveTupleMath.bmul,
-  ForwardDiff.Dual{Txy}(
-    bmul(x.value, y.value),
-    badd(bmul(x.value, y.partials.values), bmul(x.partials.values, y.value)),
-  ),
-  ForwardDiff.Dual{Tx}(bmul(x.value, y), bmul(x.partials.values, y)),
-  ForwardDiff.Dual{Ty}(bmul(x, y.value), bmul(x, y.partials.values))
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Txy}(
+      bmul(x.value, y.value),
+      badd(bmul(x.value, y.partials.values), bmul(x.partials.values, y.value)),
+    )
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Tx}(bmul(x.value, y), bmul(x.partials.values, y))
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Ty}(bmul(x, y.value), bmul(x, y.partials.values))
+  end
 )
 ForwardDiff.@define_binary_dual_op(
   RecursiveTupleMath.bdiv,
-  ForwardDiff.Dual{Txy}(
-    bdiv(x.value, y.value),
-    bdiv(
-      bsub(bmul(x.partials.values, y.value), bmul(x.value, y.partials.values)),
-      bmul(y.value, y.value),
-    ),
-  ),
-  ForwardDiff.Dual{Tx}(bdiv(x.value, y), bdiv(bmul(x.partials.values, y), bmul(y, y))),
-  ForwardDiff.Dual{Ty}(
-    bdiv(x, y.value),
-    bdiv(bsub(bmul(x, y.partials.values)), bmul(y.value, y.value)),
-  ),
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Txy}(
+      bdiv(x.value, y.value),
+      bdiv(
+        bsub(bmul(x.partials.values, y.value), bmul(x.value, y.partials.values)),
+        bmul(y.value, y.value),
+      ),
+    )
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Tx}(bdiv(x.value, y), bdiv(bmul(x.partials.values, y), bmul(y, y)))
+  end,
+  begin
+    Base.@_inline_meta
+    ForwardDiff.Dual{Ty}(
+      bdiv(x, y.value),
+      bdiv(bsub(bmul(x, y.partials.values)), bmul(y.value, y.value)),
+    )
+  end,
 )
 ForwardDiff.@define_binary_dual_op(
   RecursiveTupleMath.bmax,
   begin
+    Base.@_inline_meta
     cmp = gt_fast(x.value, y.value)
     v = ifelse(cmp, x.value, y.value)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -128,6 +172,7 @@ ForwardDiff.@define_binary_dual_op(
     ForwardDiff.Dual{Txy}(v, p)
   end,
   begin
+    Base.@_inline_meta
     cmp = gt_fast(x.value, y)
     v = ifelse(cmp, x.value, y)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -136,6 +181,7 @@ ForwardDiff.@define_binary_dual_op(
     ForwardDiff.Dual{Tx}(v, p)
   end,
   begin
+    Base.@_inline_meta
     cmp = gt_fast(x, y.value)
     v = ifelse(cmp, x, y.value)
     bcmp = btuple(cmp, Val(length(y.partials)))
@@ -147,6 +193,7 @@ ForwardDiff.@define_binary_dual_op(
 ForwardDiff.@define_binary_dual_op(
   RecursiveTupleMath.bmin,
   begin
+    Base.@_inline_meta
     cmp = lt_fast(x.value, y.value)
     v = ifelse(cmp, x.value, y.value)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -154,6 +201,7 @@ ForwardDiff.@define_binary_dual_op(
     ForwardDiff.Dual{Txy}(v, p)
   end,
   begin
+    Base.@_inline_meta
     cmp = lt_fast(x.value, y)
     v = ifelse(cmp, x.value, y)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -162,6 +210,7 @@ ForwardDiff.@define_binary_dual_op(
     ForwardDiff.Dual{Tx}(v, p)
   end,
   begin
+    Base.@_inline_meta
     cmp = lt_fast(x, y.value)
     v = ifelse(cmp, x, y.value)
     bcmp = btuple(cmp, Val(length(y.partials)))
