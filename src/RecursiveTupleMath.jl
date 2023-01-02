@@ -13,12 +13,7 @@ Note that because it is recursive, `bmul(a, b)` will not necessarilly do the sam
 """
 module RecursiveTupleMath
 
-const var"@_inline" = @static if VERSION >= v"1.8"
-  var"@inline"
-else
-  using Base: @_inline_meta
-  var"@_inline_meta"
-end
+using Base: @_inline_meta
 export bmax, bmin, badd, bsub, bmul, bdiv
 
 using StaticArrays, ForwardDiff
@@ -90,55 +85,55 @@ end
 @define_binary_dual_op(
   RecursiveTupleMath.badd,
   begin
-    @_inline
+    @_inline_meta
     Dual{Txy}(badd(x.value, y.value), badd(x.partials.values, y.partials.values))
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Tx}(badd(x.value, y), x.partials)
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Ty}(badd(x, y.value), y.partials.values)
   end,
 )
 @define_binary_dual_op(
   RecursiveTupleMath.bsub,
   begin
-    @_inline
+    @_inline_meta
     Dual{Txy}(bsub(x.value, y.value), bsub(x.partials.values, y.partials.values))
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Tx}(bsub(x.value, y), x.partials)
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Ty}(bsub(x, y.value), bsub(y.partials.values))
   end
 )
 @define_binary_dual_op(
   RecursiveTupleMath.bmul,
   begin
-    @_inline
+    @_inline_meta
     Dual{Txy}(
       bmul(x.value, y.value),
       badd(bmul(x.value, y.partials.values), bmul(x.partials.values, y.value)),
     )
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Tx}(bmul(x.value, y), bmul(x.partials.values, y))
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Ty}(bmul(x, y.value), bmul(x, y.partials.values))
   end
 )
 @define_binary_dual_op(
   RecursiveTupleMath.bdiv,
   begin
-    @_inline
+    @_inline_meta
     Dual{Txy}(
       bdiv(x.value, y.value),
       bdiv(
@@ -148,11 +143,11 @@ end
     )
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Tx}(bdiv(x.value, y), bdiv(bmul(x.partials.values, y), bmul(y, y)))
   end,
   begin
-    @_inline
+    @_inline_meta
     Dual{Ty}(
       bdiv(x, y.value),
       bdiv(bsub(bmul(x, y.partials.values)), bmul(y.value, y.value)),
@@ -162,7 +157,7 @@ end
 @define_binary_dual_op(
   RecursiveTupleMath.bmax,
   begin
-    @_inline
+    @_inline_meta
     cmp = gt_fast(x.value, y.value)
     v = ifelse(cmp, x.value, y.value)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -170,7 +165,7 @@ end
     Dual{Txy}(v, p)
   end,
   begin
-    @_inline
+    @_inline_meta
     cmp = gt_fast(x.value, y)
     v = ifelse(cmp, x.value, y)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -179,7 +174,7 @@ end
     Dual{Tx}(v, p)
   end,
   begin
-    @_inline
+    @_inline_meta
     cmp = gt_fast(x, y.value)
     v = ifelse(cmp, x, y.value)
     bcmp = btuple(cmp, Val(length(y.partials)))
@@ -191,7 +186,7 @@ end
 @define_binary_dual_op(
   RecursiveTupleMath.bmin,
   begin
-    @_inline
+    @_inline_meta
     cmp = lt_fast(x.value, y.value)
     v = ifelse(cmp, x.value, y.value)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -199,7 +194,7 @@ end
     Dual{Txy}(v, p)
   end,
   begin
-    @_inline
+    @_inline_meta
     cmp = lt_fast(x.value, y)
     v = ifelse(cmp, x.value, y)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -208,7 +203,7 @@ end
     Dual{Tx}(v, p)
   end,
   begin
-    @_inline
+    @_inline_meta
     cmp = lt_fast(x, y.value)
     v = ifelse(cmp, x, y.value)
     bcmp = btuple(cmp, Val(length(y.partials)))
