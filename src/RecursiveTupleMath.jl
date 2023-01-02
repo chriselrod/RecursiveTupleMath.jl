@@ -27,12 +27,12 @@ using ForwardDiff: ≺, @define_binary_dual_op, Dual
 @inline lt_fast(a, b) = a < b
 @inline lt_fast(a::Float64, b::Float64) = Base.lt_float_fast(a, b)
 @inline lt_fast(a::Float32, b::Float32) = Base.lt_float_fast(a, b)
-@inline le_fast(a, b) = a <= b
-@inline le_fast(a::Float64, b::Float64) = Base.le_float_fast(a, b)
-@inline le_fast(a::Float32, b::Float32) = Base.le_float_fast(a, b)
-
 @inline gt_fast(a, b) = lt_fast(b, a)
-@inline ge_fast(a, b) = le_fast(b, a)
+
+# @inline le_fast(a, b) = a <= b
+# @inline le_fast(a::Float64, b::Float64) = Base.le_float_fast(a, b)
+# @inline le_fast(a::Float32, b::Float32) = Base.le_float_fast(a, b)
+# @inline ge_fast(a, b) = le_fast(b, a)
 
 @inline badd(a, b) = Base.FastMath.add_fast(a, b)
 @inline bsub(a, b) = Base.FastMath.sub_fast(a, b)
@@ -47,8 +47,6 @@ for bf ∈ [:bmax, :bmin, :badd, :bsub, :bmul, :bdiv]
     # terminating case
     @inline $bf(::Number, ::Tuple{}) = ()
     @inline $bf(::Tuple{}, ::Number) = ()
-    @inline $bf(::Number, ::Nothing) = nothing
-    @inline $bf(::Nothing, ::Number) = nothing
 
     # broadcast
     @inline $bf(x::Number, y::StaticArray{S}) where {S} = SArray{S}($bf(x, Tuple(y)))
@@ -87,60 +85,60 @@ end
   ntuple(Returns(v), Val(D))
 end
 
-# @inline 
+@inline bsub(x::Dual{T}) where {T} = Dual{T}(bsub(x.value), bsub(x.partials.values))
 
 @define_binary_dual_op(
   RecursiveTupleMath.badd,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Txy}(badd(x.value, y.value), badd(x.partials.values, y.partials.values))
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Tx}(badd(x.value, y), x.partials)
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Ty}(badd(x, y.value), y.partials.values)
   end,
 )
 @define_binary_dual_op(
   RecursiveTupleMath.bsub,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Txy}(bsub(x.value, y.value), bsub(x.partials.values, y.partials.values))
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Tx}(bsub(x.value, y), x.partials)
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Ty}(bsub(x, y.value), bsub(y.partials.values))
   end
 )
 @define_binary_dual_op(
   RecursiveTupleMath.bmul,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Txy}(
       bmul(x.value, y.value),
       badd(bmul(x.value, y.partials.values), bmul(x.partials.values, y.value)),
     )
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Tx}(bmul(x.value, y), bmul(x.partials.values, y))
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Ty}(bmul(x, y.value), bmul(x, y.partials.values))
   end
 )
 @define_binary_dual_op(
   RecursiveTupleMath.bdiv,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Txy}(
       bdiv(x.value, y.value),
       bdiv(
@@ -150,11 +148,11 @@ end
     )
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Tx}(bdiv(x.value, y), bdiv(bmul(x.partials.values, y), bmul(y, y)))
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     Dual{Ty}(
       bdiv(x, y.value),
       bdiv(bsub(bmul(x, y.partials.values)), bmul(y.value, y.value)),
@@ -164,7 +162,7 @@ end
 @define_binary_dual_op(
   RecursiveTupleMath.bmax,
   begin
-    Base.@_inline_meta
+    @_inline
     cmp = gt_fast(x.value, y.value)
     v = ifelse(cmp, x.value, y.value)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -172,7 +170,7 @@ end
     Dual{Txy}(v, p)
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     cmp = gt_fast(x.value, y)
     v = ifelse(cmp, x.value, y)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -181,7 +179,7 @@ end
     Dual{Tx}(v, p)
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     cmp = gt_fast(x, y.value)
     v = ifelse(cmp, x, y.value)
     bcmp = btuple(cmp, Val(length(y.partials)))
@@ -193,7 +191,7 @@ end
 @define_binary_dual_op(
   RecursiveTupleMath.bmin,
   begin
-    Base.@_inline_meta
+    @_inline
     cmp = lt_fast(x.value, y.value)
     v = ifelse(cmp, x.value, y.value)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -201,7 +199,7 @@ end
     Dual{Txy}(v, p)
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     cmp = lt_fast(x.value, y)
     v = ifelse(cmp, x.value, y)
     bcmp = btuple(cmp, Val(length(x.partials)))
@@ -210,7 +208,7 @@ end
     Dual{Tx}(v, p)
   end,
   begin
-    Base.@_inline_meta
+    @_inline
     cmp = lt_fast(x, y.value)
     v = ifelse(cmp, x, y.value)
     bcmp = btuple(cmp, Val(length(y.partials)))
