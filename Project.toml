@@ -1,14 +1,14 @@
 name = "RecursiveTupleMath"
 uuid = "4a4311fe-81ff-4bcc-86a3-5026a4bf5b9f"
 authors = ["chriselrod <elrodc@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-ForwardDiff = "0.10"
+ForwardDiff = "0.10, 1"
 StaticArrays = "1"
 julia = "1"
 
